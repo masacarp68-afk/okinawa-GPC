@@ -944,7 +944,7 @@ let playerMaster = {};
 let allRows = [];
 let allGames = []; // 計算済みの全対局
 let autoRefreshTimer = null;
-let currentPeriod = 'all'; // 'all' | 'year:YYYY' | 'month:YYYY-MM'
+let currentPeriod = 'all'; // 'all' | 'year:YYYY' | 'setsu:N'
 
 // 初期マスタ(サンプル用) — 全節共通のマスタとして扱う(サンプル簡略化)
 function initSampleMaster() {
@@ -1034,40 +1034,37 @@ function getTodayGames(games) {
 function filterByPeriod(games, period) {
   if (period === 'all') return games;
   if (period.startsWith('year:')) {
+    // 年別は「その年に開催されたと思われる」対局を抽出
+    // 実際の対局日(gameDate)ではなく送信日時が過去分の入力ズレを含むので、
+    // 節ごとに開催年をまとめて判定する
     const y = parseInt(period.split(':')[1]);
     return games.filter(g => new Date(g.gameDate || g.timestamp).getFullYear() === y);
   }
-  if (period.startsWith('month:')) {
-    const [y, m] = period.split(':')[1].split('-').map(Number);
-    return games.filter(g => {
-      const d = new Date(g.gameDate || g.timestamp);
-      return d.getFullYear() === y && d.getMonth() + 1 === m;
-    });
+  if (period.startsWith('setsu:')) {
+    const s = parseInt(period.split(':')[1]);
+    return games.filter(g => g.setsu === s);
   }
   return games;
 }
 
 // データから利用可能な期間タブを生成
-// 通算 → 年(新しい順) → 月(新しい順) のフラットな並び
+// 通算 → 年(新しい順) → 節(新しい順) のフラットな並び
 function getAvailablePeriods(games) {
   const years = new Set();
-  const months = new Set();
+  const setsuSet = new Set();
   games.forEach(g => {
     const d = new Date(g.gameDate || g.timestamp);
-    const y = d.getFullYear();
-    const m = d.getMonth() + 1;
-    years.add(y);
-    months.add(`${y}-${String(m).padStart(2, '0')}`);
+    years.add(d.getFullYear());
+    if (g.setsu) setsuSet.add(g.setsu);
   });
   const yearArr = Array.from(years).sort((a, b) => b - a);
-  const monthArr = Array.from(months).sort().reverse();
+  const setsuArr = Array.from(setsuSet).sort((a, b) => b - a);
   const result = [{ key: 'all', jp: '通算', en: 'ALL' }];
   yearArr.forEach(y => {
     result.push({ key: `year:${y}`, jp: `${y}年`, en: `${y}` });
   });
-  monthArr.forEach(ym => {
-    const [y, m] = ym.split('-');
-    result.push({ key: `month:${ym}`, jp: `${y}年${parseInt(m)}月`, en: `${y}.${m}` });
+  setsuArr.forEach(s => {
+    result.push({ key: `setsu:${s}`, jp: `第${s}節`, en: `SETSU ${s}` });
   });
   return result;
 }
