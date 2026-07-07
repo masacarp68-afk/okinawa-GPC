@@ -818,7 +818,7 @@
 // 設定
 // ============================================================
 const DEFAULT_RESULTS_URL = "https://docs.google.com/spreadsheets/d/1HSK0BryAmGGKuki39lJxg1RK-qS9ctwDgZgVQS3Soc0/edit?gid=0#gid=0";
-const DEFAULT_MASTER_URL  = "https://docs.google.com/spreadsheets/d/1kNrmmxhnt_vUsUmd1E9hZE_QzN4KSctJ1DkUweWIURw/edit?usp=sharing";
+const DEFAULT_MASTER_URL  = "https://docs.google.com/spreadsheets/d/1kNrmmxhnt_vUsUmd1E9hZE_QzN4KSctJ1DkUweWIURw/edit";
 const AUTO_REFRESH_MS = 300000;   // 5分ごとに自動更新(0で無効)
 
 // ウマ・オカ
@@ -1420,7 +1420,7 @@ function parsePreCSV(text) {
   const lines = text.trim().split(/\r?\n/);
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',').map(s => s.trim());
+    const cols = lines[i].split(',').map(s => s.trim().replace(/^"|"$/g, ''));
     if (cols.length < 13) continue;
     const setsu = parseInt(cols[1]);
     if (!isNaN(setsu)) rows.push({ setsu });
@@ -1441,7 +1441,8 @@ function parseMasterCSV(text) {
   const lines = text.trim().split(/\r?\n/);
   const map = {};
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',').map(s => s.trim());
+    // ダブルクォートで囲まれたCSVに対応
+    const cols = lines[i].split(',').map(s => s.trim().replace(/^"|"$/g, ''));
     if (cols.length < 2) continue;
     const num = parseInt(cols[0]);
     const name = cols[1];
@@ -1458,7 +1459,8 @@ function parseCSV(text) {
   const lines = text.trim().split(/\r?\n/);
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',').map(s => s.trim());
+    // ダブルクォートで囲まれたCSVに対応
+    const cols = lines[i].split(',').map(s => s.trim().replace(/^"|"$/g, ''));
     if (cols.length < 13) continue;
     const setsu = parseInt(cols[1]) || null;
     const players = [];
